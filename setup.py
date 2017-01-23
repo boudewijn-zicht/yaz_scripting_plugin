@@ -7,5 +7,5 @@ setup(name='yaz_scripting_plugin',
       author_email='yaz@frayja.com',
       license='MIT',
       packages=['yaz_scripting_plugin'],
-      install_requires=['yaz'],
+      install_requires=["yaz", "yaz_templating_plugin"],
       zip_safe=False)
