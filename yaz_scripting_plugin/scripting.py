@@ -17,14 +17,13 @@ class Scripting(Plugin):
 
     async def capture(self,
                       cmd: str,
-                      input: str = "",
+                      input: Optional[str] = None,
                       context: Optional[dict] = None,
                       valid_codes=(0,),
-                      dry_run: bool = False,
                       merge_stderr: bool = True,
-                      manage_encoding: bool = True
+                      dry_run: bool = False,
                       ) -> str:
-        """Call a subprocess, wait for it to finish, and return the output
+        """Call a subprocess, wait for it to finish, and return the output as a string
 
         CMD is a string that is interpreted as a shell command and the user is responsible for
         escaping.  Escaping is done using the template filter and tag 'quote'.
@@ -50,16 +49,13 @@ class Scripting(Plugin):
         VALID_CODES is a tuple with one or more integers.  When the subprocess has a return code
         that is not in VALID_CODES, an InvalidReturnCodeError is raised.
 
-        DRY_RUN determines if this call is performed.  When set to True the subprocess is not
-        started.
-
         MERGE_STDERR determines if the stderr stream of the process is merged into the result.
         When False, the stderr stream is ignored.
 
-        MANAGE_ENCODING determines the return type.  When True, the process output is returned
-        as a string, otherwise bytes are returned.
+        DRY_RUN determines if this call is performed.  When set to True the subprocess is not
+        started.
         """
-        streamer = await self.call(cmd, input=input, context=context, dry_run=dry_run, merge_stderr=merge_stderr, manage_encoding=False)
+        streamer = await self.call(cmd, input=input, context=context, merge_stderr=merge_stderr, dry_run=dry_run)
 
         # collect output streams
         results = {"stdout": [], "stderr": []}
@@ -67,25 +63,20 @@ class Scripting(Plugin):
             results[output.source].append(output.value)
 
         stdout = b"".join(results["stdout"])
-        if manage_encoding:
-            stdout = stdout.decode()
-
         return_code = streamer.get_return_code()
         if return_code not in valid_codes:
             stderr = b"".join(results["stderr"])
-            if manage_encoding:
-                stderr = stderr.decode()
-            raise InvalidReturnCodeError(return_code, stderr=stderr, stdout=stdout)
+            raise InvalidReturnCodeError(return_code, stdout=stdout, stderr=stderr)
 
-        return stdout
+        return stdout.decode()
 
     async def interact(self,
                        cmd: str,
-                       input: str = "",
+                       input: Optional[str] = None,
                        context: Optional[dict] = None,
                        valid_codes=(0,),
-                       dry_run: bool = False
-                       ):
+                       dry_run: bool = False,
+                       ) -> int:
         """Call a subprocess and provide a screen window to interact with it
 
         CMD is a string that is interpreted as a shell command and the user is responsible for
@@ -119,7 +110,7 @@ class Scripting(Plugin):
         # Start a screen and the cmd
         screen_client, streamer = await asyncio.gather(
             self.screen_server.register(Client("yaz {}".format(cmd))),
-            self.call(cmd, input=input, context=context, dry_run=dry_run, merge_stderr=True, manage_encoding=False),
+            self.call(cmd, input=input, context=context, dry_run=dry_run, merge_stderr=True),
         )
 
         # todo we are reading lines, should probably change that into reading data, but without blocking...
@@ -136,11 +127,10 @@ class Scripting(Plugin):
 
     async def call(self,
                    cmd: str,
-                   input: str = "",
+                   input: Optional[str] = None,
                    context: Optional[dict] = None,
-                   dry_run: bool = False,
                    merge_stderr: bool = True,
-                   manage_encoding: bool = True
+                   dry_run: bool = False,
                    ) -> BaseStreamer:
         """Call a subprocess and provide streams for stdin, stdout, and stderr to interact with
 
@@ -165,23 +155,20 @@ class Scripting(Plugin):
         - await call("cat {{ filename|quote }}", context=dict(filename="hello world.txt"))
         - await call("ssh {{ remote|quote }} {% quote %}cd {{ dir|quote }}; ls{% endquote %}", context=dict(...))
 
-        DRY_RUN determines if this call is performed.  When set to True the subprocess is not
-        started.
-
         MERGE_STDERR determines if the stderr stream of the process is merged into the result.
         When False, the stderr stream is ignored.
 
-        MANAGE_ENCODING determines the return type.  When True, the process output is returned
-        as a string, otherwise bytes are returned.
+        DRY_RUN determines if this call is performed.  When set to True the subprocess is not
+        started.
         """
         cmd = self.templating.render(cmd, context)
-        input = self.templating.render(input, context)
+        if input is not None:
+            input = self.templating.render(input, context)
         logger.info(self.templating.render("{% if input %}echo {{ input|quote }} | {% endif %}{{ cmd }}",
                                            dict(input=input, cmd=cmd)))
 
-        # streamer = DummyStreamer() if dry_run else Streamer(bool(input), merge_stderr, manage_encoding)
-        streamer = DummyStreamer() if dry_run else Streamer(True, merge_stderr, manage_encoding)
-        await streamer.create(cmd)
+        streamer = DummyStreamer() if dry_run else Streamer()
+        await streamer.create(cmd, True, merge_stderr)
 
         if input:
             await streamer.write(input.encode(), True)

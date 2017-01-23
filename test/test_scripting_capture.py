@@ -46,14 +46,14 @@ class TestScriptingCapture(unittest.TestCase):
         """Should run a simple shell command with stdin"""
 
         async def test():
-            result = await self.scripting.capture("sh", "echo -n 'Hello World!'")
+            result = await self.scripting.capture("sh", "echo -n \"Hello World!\"")
             self.assertEqual("Hello World!", result)
 
         self.loop.run_until_complete(test())
 
     def test_330_input__sequential(self):
         """Should run a simple shell command with stdin (sequential)"""
-        result = self.sequential_scripting.capture("sh", "echo -n 'Hello World!'")
+        result = self.sequential_scripting.capture("sh", "echo -n \"Hello World!\"")
         self.assertEqual("Hello World!", result)
 
     def test_040_context(self):
@@ -102,8 +102,8 @@ class TestScriptingCapture(unittest.TestCase):
                 self.assertTrue(False, "Expected a RuntimeError")
             except InvalidReturnCodeError as error:
                 self.assertEqual(1, error.get_return_code())
-                self.assertEqual("STDOUT", error.get_stdout())
-                self.assertEqual("STDERR", error.get_stderr())
+                self.assertEqual(b"STDOUT", error.get_stdout())
+                self.assertEqual(b"STDERR", error.get_stderr())
 
         async def test_valid_code():
             result = await self.scripting.capture("sh", "exit 1", valid_codes=(1,))
@@ -119,8 +119,8 @@ class TestScriptingCapture(unittest.TestCase):
             self.assertTrue(False, "Expected a RuntimeError")
         except InvalidReturnCodeError as error:
             self.assertEqual(1, error.get_return_code())
-            self.assertEqual("STDOUT", error.get_stdout())
-            self.assertEqual("STDERR", error.get_stderr())
+            self.assertEqual(b"STDOUT", error.get_stdout())
+            self.assertEqual(b"STDERR", error.get_stderr())
 
         # test valid code
         result = self.sequential_scripting.capture("sh", "exit 1", valid_codes=(1,))
@@ -181,26 +181,3 @@ exit(0)
         # test without merge
         result = self.sequential_scripting.capture("python", script, merge_stderr=False)
         self.assertEqual("to stdout\n", result)
-
-    def test_080_manage_encoding(self):
-        """Should convert between bytes and string"""
-
-        async def test_with_manage_encoding():
-            result = await self.scripting.capture("sh", "echo -n {% quote %}Hello World!{% end_quote %}")
-            self.assertEqual("Hello World!", result)
-
-        async def test_without_manage_encoding():
-            result = await self.scripting.capture("sh", "echo -n {% quote %}Hello World!{% end_quote %}", manage_encoding=False)
-            self.assertEqual(b"Hello World!", result)
-
-        self.loop.run_until_complete(asyncio.gather(test_with_manage_encoding(), test_without_manage_encoding()))
-
-    def test_380_manage_encoding__sequential(self):
-        """Should convert between bytes and string (sequential)"""
-        # test with manage encoding
-        result = self.sequential_scripting.capture("sh", "echo -n {% quote %}Hello World!{% end_quote %}")
-        self.assertEqual("Hello World!", result)
-
-        # test without manage encoding
-        result = self.sequential_scripting.capture("sh", "echo -n {% quote %}Hello World!{% end_quote %}", manage_encoding=False)
-        self.assertEqual(b"Hello World!", result)

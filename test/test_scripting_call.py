@@ -19,7 +19,7 @@ class TestScriptingCall(unittest.TestCase):
             for i in range(42):
                 output = await streamer.read_line()
                 self.assertEqual("stdout", output.source)
-                self.assertEqual(str(i), output.value)
+                self.assertEqual("{}\n".format(i).encode(), output.value)
                 self.assertTrue(output.has_more)
                 self.assertTrue(output)
 
@@ -41,7 +41,7 @@ class TestScriptingCall(unittest.TestCase):
             async for output in streamer.iter_lines():
                 self.assertIsInstance(output, Output)
                 self.assertEqual("stdout", output.source)
-                self.assertEqual(str(i), output.value)
+                self.assertEqual("{}\n".format(i).encode(), output.value)
                 i += 1
 
         self.loop.run_until_complete(test())
@@ -54,22 +54,22 @@ class TestScriptingCall(unittest.TestCase):
             streamer = await self.scripting.call("cat")
             await streamer.write_lines([b"Hello\n", b"World\n", b"!\n"], True)
 
-            output = await streamer.read_line(False)
+            output = await streamer.read_line()
             self.assertIsInstance(output, Output)
             self.assertEqual("stdout", output.source)
-            self.assertEqual("Hello\n", output.value)
+            self.assertEqual(b"Hello\n", output.value)
 
-            output = await streamer.read_line(False)
+            output = await streamer.read_line()
             self.assertIsInstance(output, Output)
             self.assertEqual("stdout", output.source)
-            self.assertEqual("World\n", output.value)
+            self.assertEqual(b"World\n", output.value)
 
-            output = await streamer.read_line(False)
+            output = await streamer.read_line()
             self.assertIsInstance(output, Output)
             self.assertEqual("stdout", output.source)
-            self.assertEqual("!\n", output.value)
+            self.assertEqual(b"!\n", output.value)
 
-            output = await streamer.read_line(False)
+            output = await streamer.read_line()
             self.assertIsInstance(output, Output)
             self.assertEqual("return_code", output.source)
             self.assertEqual(0, output.value)
