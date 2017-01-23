@@ -18,9 +18,6 @@ class BaseStreamer:
     async def create(self, cmd: str, can_write: bool, merge_stderr: bool):
         pass
 
-    async def wait(self):
-        return False
-
     async def read(self, n: int = -1) -> Output:
         return Output("return_code", 0, False)
 
@@ -66,12 +63,11 @@ class BaseStreamer:
         pass
 
     def get_return_code(self):
-        pass
+        return 0
 
 
 class DummyStreamer(BaseStreamer):
-    def get_return_code(self):
-        return 0
+    pass
 
 
 class Streamer(BaseStreamer):
