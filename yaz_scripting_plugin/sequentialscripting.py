@@ -1,10 +1,12 @@
 import asyncio
-from yaz.plugin import Plugin
+import yaz
+
 from .scripting import Scripting
 
 
-class SequentialScripting(Plugin):
-    def __init__(self, scripting: Scripting):
+class SequentialScripting(yaz.BasePlugin):
+    @yaz.dependency
+    def set_scripting(self, scripting: Scripting):
         self.scripting = scripting
 
     def capture(self, *args, **kwargs):

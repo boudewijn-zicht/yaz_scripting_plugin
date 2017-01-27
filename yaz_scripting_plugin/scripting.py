@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional
 
-from yaz.plugin import Plugin
+import yaz
 from yaz_templating_plugin import Templating
 
 from .log import logger
@@ -10,10 +10,13 @@ from .streamer import BaseStreamer, DummyStreamer, Streamer
 from .screen import Server, Client
 
 
-class Scripting(Plugin):
-    def __init__(self, templating: Templating):
-        self.templating = templating
+class Scripting(yaz.BasePlugin):
+    def __init__(self):
         self.screen_server = Server()
+
+    @yaz.dependency
+    def set_templating(self, templating: Templating):
+        self.templating = templating
 
     async def capture(self,
                       cmd: str,

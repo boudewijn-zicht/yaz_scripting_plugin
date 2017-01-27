@@ -1,13 +1,15 @@
 import unittest
 import asyncio
+import yaz
+
 from yaz_scripting_plugin import Scripting, SequentialScripting
 from yaz_scripting_plugin.error import InvalidReturnCodeError
 
 
 class TestScriptingCapture(unittest.TestCase):
     def setUp(self):
-        self.scripting = Scripting()
-        self.sequential_scripting = SequentialScripting()
+        self.scripting = yaz.get_plugin_instance(Scripting)
+        self.sequential_scripting = yaz.get_plugin_instance(SequentialScripting)
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 

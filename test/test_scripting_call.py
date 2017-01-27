@@ -1,12 +1,14 @@
 import unittest
 import asyncio
+import yaz
+
 from yaz_scripting_plugin import Scripting
 from yaz_scripting_plugin.streamer import Output
 
 
 class TestScriptingCall(unittest.TestCase):
     def setUp(self):
-        self.scripting = Scripting()
+        self.scripting = yaz.get_plugin_instance(Scripting)
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
