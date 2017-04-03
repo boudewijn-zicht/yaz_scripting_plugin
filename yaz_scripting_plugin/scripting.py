@@ -58,18 +58,29 @@ class Scripting(yaz.BasePlugin):
         DRY_RUN determines if this call is performed.  When set to True the subprocess is not
         started.
         """
-        streamer = await self.call(cmd, input=input, context=context, merge_stderr=merge_stderr, dry_run=dry_run)
+        cmd = self.templating.render(cmd, context)
+        if input is not None:
+            input = self.templating.render(input, context)
+        logger.info(self.templating.render("{% if input %}echo {{ input|quote }} | {% endif %}{{ cmd }}", dict(input=input, cmd=cmd)))
 
-        # collect output streams
-        results = {"stdout": [], "stderr": []}
-        async for output in streamer.iter():
-            results[output.source].append(output.value)
+        if dry_run:
+            stdout = b""
+            stderr = b""
+            return_code = 0
 
-        stdout = b"".join(results["stdout"])
-        return_code = streamer.get_return_code()
+        else:
+            process = await asyncio.create_subprocess_shell(
+                cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT if merge_stderr else asyncio.subprocess.PIPE,
+                stdin=None if input is None else asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate(None if input is None else input.encode())
+            return_code = process.returncode
+
         if return_code not in valid_codes:
-            stderr = b"".join(results["stderr"])
-            raise InvalidReturnCodeError(return_code, stdout=stdout, stderr=stderr)
+            raise InvalidReturnCodeError(return_code, stdout, stderr)
 
         return stdout.decode()
 
