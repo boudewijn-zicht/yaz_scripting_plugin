@@ -1,7 +1,0 @@
-# hard requirements
-yaz
-yaz-templating-plugin
-
-# development requirements
-nose
-coverage
