@@ -1,8 +1,7 @@
 import asyncio
-from typing import Optional
-
+import typing
 import yaz
-from yaz_templating_plugin import Templating
+import yaz_templating_plugin
 
 from .log import logger
 from .error import InvalidReturnCodeError
@@ -15,17 +14,17 @@ class Scripting(yaz.BasePlugin):
         self.screen_server = Server()
 
     @yaz.dependency
-    def set_templating(self, templating: Templating):
+    def set_templating(self, templating: yaz_templating_plugin.Templating):
         self.templating = templating
 
     async def capture(self,
                       cmd: str,
-                      input: Optional[str] = None,
-                      context: Optional[dict] = None,
-                      valid_codes=(0,),
+                      input: typing.Optional[str] = None,
+                      context: typing.Optional[dict] = None,
+                      valid_codes: typing.Tuple[int, ...] = (0,),
                       merge_stderr: bool = True,
                       dry_run: bool = False,
-                      ) -> str:
+                      ) -> (str, str):
         """Call a subprocess, wait for it to finish, and return the output as a string
 
         CMD is a string that is interpreted as a shell command and the user is responsible for
@@ -58,6 +57,14 @@ class Scripting(yaz.BasePlugin):
         DRY_RUN determines if this call is performed.  When set to True the subprocess is not
         started.
         """
+        assert isinstance(cmd, str), type(cmd)
+        assert input is None or isinstance(input, str), type(input)
+        assert context is None or isinstance(context, dict), type(context)
+        assert isinstance(valid_codes, tuple), type(valid_codes)
+        assert all(isinstance(valid_code, int) for valid_code in valid_codes), [type(valid_code) for valid_code in valid_codes]
+        assert isinstance(merge_stderr, bool), type(merge_stderr)
+        assert isinstance(dry_run, bool), type(dry_run)
+
         cmd = self.templating.render(cmd, context)
         if input is not None:
             input = self.templating.render(input, context)
@@ -82,13 +89,13 @@ class Scripting(yaz.BasePlugin):
         if return_code not in valid_codes:
             raise InvalidReturnCodeError(return_code, stdout, stderr)
 
-        return stdout.decode()
+        return stdout.decode(), None if merge_stderr else stderr.decode()
 
     async def interact(self,
                        cmd: str,
-                       input: Optional[str] = None,
-                       context: Optional[dict] = None,
-                       valid_codes=(0,),
+                       input: typing.Optional[str] = None,
+                       context: typing.Optional[dict] = None,
+                       valid_codes: typing.Tuple[int, ...] = (0,),
                        dry_run: bool = False,
                        ) -> int:
         """Call a subprocess and provide a screen window to interact with it
@@ -141,8 +148,8 @@ class Scripting(yaz.BasePlugin):
 
     async def call(self,
                    cmd: str,
-                   input: Optional[str] = None,
-                   context: Optional[dict] = None,
+                   input: typing.Optional[str] = None,
+                   context: typing.Optional[dict] = None,
                    merge_stderr: bool = True,
                    dry_run: bool = False,
                    ) -> BaseStreamer:
