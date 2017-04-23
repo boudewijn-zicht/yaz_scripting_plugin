@@ -24,7 +24,7 @@ setuptools.setup(
     description="A plugin for YAZ providing shell scripting access",
     author="Boudewijn Schoon",
     author_email="yaz@frayja.com",
-    url="https://github.com/boudewijn-zicht/yaz_scripting_plugin",
+    url="https://github.com/yaz/yaz_scripting_plugin",
     license="MIT",
     install_requires=["yaz", "yaz_templating_plugin"],
     zip_safe=False,
