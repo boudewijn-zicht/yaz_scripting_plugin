@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+
+import asyncio
+import yaz
+import yaz_scripting_plugin
+import coloredlogs
+
+coloredlogs.install("DEBUG")
+
+
+class ScriptingDemo(yaz.Plugin):
+    @yaz.dependency
+    def set_shell(self, shell: yaz_scripting_plugin.Shell):
+        self.shell = shell
+
+    @yaz.task
+    async def small_data(self, line_count: int = 10):
+        """Output a few lines of text"""
+        script = """
+for index in range({{line_count}}):
+    print(index, str(index % 9) * index)
+"""
+        await self.shell.run("python3", script, dict(line_count=line_count))
+
+    @yaz.task
+    async def big_data(self, line_count: int = 1024, sleep: float = 0.01):
+        """Output many lines of text"""
+        script = """
+import time
+import sys
+
+for index in range({{line_count}}):
+    print(index, str(index % 9) * (index % 80))
+    sys.stdout.flush()
+    time.sleep({{sleep}})
+"""
+        await self.shell.run("python3", script, dict(line_count=line_count, sleep=sleep))
+
+    @yaz.task
+    async def exec(self, cmd:str="htop"):
+        """Start a command (defaults to htop)"""
+        await self.shell.run(cmd)
+
+    @yaz.task
+    async def all(self, line_count: int = 1024, sleep: float = 0.01):
+        """Runs all demo's in parallel"""
+        return await asyncio.gather(
+            self.small_data(),
+            self.big_data(),
+            self.big_data(),
+            self.exec()
+        )
+
+
+if __name__ == "__main__":
+    yaz.main()

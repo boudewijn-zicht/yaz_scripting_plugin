@@ -1,4 +1,3 @@
-__all__ = ["Scripting", "SequentialScripting"]
+__all__ = ["Shell"]
 
-from .scripting import Scripting
-from .sequentialscripting import SequentialScripting
+from .shell import Shell
