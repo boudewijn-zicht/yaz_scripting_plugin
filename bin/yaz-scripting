@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env yaz-screen-wrapper
 
 import asyncio
 import yaz
 import yaz_scripting_plugin
-import coloredlogs
-
-coloredlogs.install("DEBUG")
 
 
 class ScriptingDemo(yaz.Plugin):
@@ -37,9 +34,14 @@ for index in range({{line_count}}):
         await self.shell.run("python3", script, dict(line_count=line_count, sleep=sleep))
 
     @yaz.task
-    async def exec(self, cmd:str="htop"):
+    async def exec(self, cmd: str = "htop"):
         """Start a command (defaults to htop)"""
         await self.shell.run(cmd)
+
+    @yaz.task
+    async def error(self, message: str = "An expected error occurred"):
+        """Raises an exception"""
+        raise yaz.Error(message)
 
     @yaz.task
     async def all(self, line_count: int = 1024, sleep: float = 0.01):
@@ -50,7 +52,6 @@ for index in range({{line_count}}):
             self.big_data(),
             self.exec()
         )
-
 
 if __name__ == "__main__":
     yaz.main()

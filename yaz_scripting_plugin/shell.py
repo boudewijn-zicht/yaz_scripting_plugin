@@ -1,4 +1,5 @@
 import asyncio
+import os
 import shlex
 import typing
 import yaz
@@ -9,6 +10,10 @@ from .error import InvalidReturnCodeError
 
 
 class Shell(yaz.BasePlugin):
+    def __init__(self):
+        self._screen_count = 0
+        self._yaz_pid = os.getpid()
+
     @yaz.dependency
     def set_templating(self, templating: yaz_templating_plugin.Templating):
         self.templating = templating
@@ -112,8 +117,7 @@ class Shell(yaz.BasePlugin):
         await writer.drain()
         writer.close()
 
-    @staticmethod
-    async def _setup_external_screen(title: str) -> (asyncio.StreamReader, asyncio.StreamWriter):
+    async def _setup_external_screen(self, title: str) -> (asyncio.StreamReader, asyncio.StreamWriter):
         class Container:
             def __init__(self):
                 self.event = asyncio.Event()
@@ -127,7 +131,7 @@ class Shell(yaz.BasePlugin):
 
         container = Container()
 
-        port = 8888
+        port = 8888 + (self._screen_count % 100)
         while True:
             try:
                 server = await asyncio.start_server(container.incoming_connection, "localhost", port)

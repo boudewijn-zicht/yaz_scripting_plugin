@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+
+# ensure that the .yaz configuration directory exists
+if [ ! -d ~/.yaz ]; then
+    mkdir ~/.yaz
+fi
+
+# ensure that the yaz-default-screenrc exists
+cat <<EOT > ~/.yaz/yaz-default-screenrc
+# no annoying audible bell, please
+vbell on
+
+# don't display the copyright page
+startup_message off
+
+# don't close screen when the processes exit
+zombie qR
+
+# show yaz menu bar
+caption always "%-Lw%{= BW}%50>%n%f* %t%{-}%+Lw%<"
+EOT
+
+# set all the screen args
+ARGS=""
+
+# set the window title
+ARGS="$ARGS -t yaz"
+
+# set the sockname
+ARGS="$ARGS -S yaz"
+
+if [ ! -r ~/.yaz/yaz-screenrc ]; then
+    ln -s ~/.yaz/yaz-default-screenrc ~/.yaz/yaz-screenrc
+fi
+ARGS="$ARGS -c ~/.yaz/yaz-screenrc"
+
+screen $ARGS python3 $@
