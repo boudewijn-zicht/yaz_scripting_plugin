@@ -1,5 +1,4 @@
 import asyncio
-import os
 import shlex
 import typing
 import yaz
@@ -12,7 +11,6 @@ from .error import InvalidReturnCodeError
 class Shell(yaz.BasePlugin):
     def __init__(self):
         self._screen_count = 0
-        self._yaz_pid = os.getpid()
 
     @yaz.dependency
     def set_templating(self, templating: yaz_templating_plugin.Templating):
