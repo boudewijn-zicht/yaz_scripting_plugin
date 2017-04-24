@@ -1,7 +1,9 @@
 *~
 /.coverage
 /.idea/
+/build/
 /cover/
+/dist/
 /env/
 __pycache__
 yaz_scripting_plugin.egg-info
