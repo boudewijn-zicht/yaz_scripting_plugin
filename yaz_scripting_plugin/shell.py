@@ -22,6 +22,7 @@ class Shell(yaz.BasePlugin):
                   cmd: str,
                   input: typing.Optional[str] = None,
                   context: typing.Optional[dict] = None,
+                  *,
                   valid_codes: typing.Tuple[int, ...] = (0,)
                   ) -> (str, str):
         """
@@ -50,6 +51,7 @@ class Shell(yaz.BasePlugin):
                   cmd: str,
                   input: typing.Optional[str] = None,
                   context: typing.Optional[dict] = None,
+                  *,
                   valid_codes: typing.Tuple[int, ...] = (0,)
                   ):
         """
