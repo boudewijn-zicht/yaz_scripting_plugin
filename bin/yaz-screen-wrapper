@@ -5,6 +5,14 @@ if [ ! -d ~/.yaz ]; then
     mkdir ~/.yaz
 fi
 
+# ensure that the .yaz/log directory exists
+if [ ! -d ~/.yaz/log ]; then
+    mkdir ~/.yaz/log
+fi
+
+# clear existing log files
+rm ~/.yaz/log/screenlog.*
+
 # ensure that the yaz-default-screenrc exists
 cat <<EOT > ~/.yaz/yaz-default-screenrc
 # no annoying audible bell, please
@@ -14,7 +22,11 @@ vbell on
 startup_message off
 
 # don't close screen when the processes exit
-zombie qR
+zombie qR onerror
+
+# create a logfile
+deflog on
+logfile $HOME/.yaz/log/screenlog.%n
 
 # show yaz menu bar
 caption always "%-Lw%{= BW}%50>%n%f* %t%{-}%+Lw%<"
@@ -35,3 +47,8 @@ fi
 ARGS="$ARGS -c ~/.yaz/yaz-screenrc"
 
 screen $ARGS python3 $@
+
+tail $HOME/.yaz/log/screenlog.0
+
+echo
+echo "Complete logs can be found at $HOME/.yaz/log"
