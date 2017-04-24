@@ -27,6 +27,7 @@ setuptools.setup(
     url="https://github.com/yaz/yaz_scripting_plugin",
     license="MIT",
     install_requires=["yaz", "yaz_templating_plugin"],
+    scripts=["bin/yaz-scripting", "bin/yaz-screen-wrapper"],
     zip_safe=False,
     test_suite="nose.collector",
     tests_require=["nose", "coverage"],
